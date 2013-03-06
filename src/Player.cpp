@@ -16,5 +16,16 @@
     along with Project Perabird.  If not, see <http://www.gnu.org/licenses/>
 */
 
-void make2d(bool rel);
+#include <string>
+#include "Tools.h"
+#include "Player.h"
+
+Player::Player() : name("") {}
+Player::~Player() {}
+std::string Player::getName() { return name; }
+void Player::setName(std::string _name) { name = _name; }
+
+vec3 Player::getPosition() { return pos; }
+void Player::setPosition(int x, int y, int z) { pos.x = x; pos.y = y; pos.z = z; }
+void Player::setPosition(vec3 _pos) { pos = _pos; }
 

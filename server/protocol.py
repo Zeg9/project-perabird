@@ -28,15 +28,19 @@ MSG_QUIT = 7 # someone quit
 MSG_PLAYERPOS = 8 # player position update
 MSG_CHAT = 9 # a chat message
 
+import struct
+
 def recv(sock):
 	data = sock.recv(1)
 	if not data: return None, None
+	print(chr(ord(data)), ord(data))
 	return chr(ord(data)), ord(data)
 
 def send(sock,data):
 	msg = data
 	if type(msg) == int: msg = chr(msg)
-	sock.send(msg.encode())
+	if type(msg) == str: msg = msg.encode()
+	sock.send(msg)
 
 def sendChat(user,msg):
 	if user == None:
@@ -46,4 +50,19 @@ def sendChat(user,msg):
 		send(user.sock,MSG_CHAT)
 		send(user.sock,msg)
 		send(user.sock,MSG_END)
+
+def sendPosition(source,target):
+	x,y,z = source.pos
+	send(target.sock,MSG_BEGIN)
+	send(target.sock,MSG_PLAYERPOS)
+	send(target.sock,source.name)
+	# TODO Identify users by id, an int, so the name isn't set everytime.
+	send(target.sock,MSG_SEP)
+	send(target.sock,struct.pack('f',x))
+	send(target.sock,MSG_SEP)
+	send(target.sock,struct.pack('f',y))
+	send(target.sock,MSG_SEP)
+	send(target.sock,struct.pack('f',z))
+	send(target.sock,MSG_END)
+
 

@@ -21,7 +21,7 @@ from protocol import *
 
 #msgspec:
 #	For user, password:
-#		strhexstr
+#		str:hexstr
 
 def parseMessage(msgspec, sock):
 	parsed = []
@@ -45,7 +45,8 @@ def parseMessage(msgspec, sock):
 				s += c
 			parsed.append(s)
 		if t == 'float':
-			parsed.append(struct.unpack('!f',sock.recv(struct.calcsize('!f'))))
+			parsed.append(struct.unpack('f',sock.recv(struct.calcsize('f')))[0])
+			c,o = recv(sock)
 		if o != MSG_SEP: # can be MSG_END
 			break
 	return parsed

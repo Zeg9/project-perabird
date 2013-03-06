@@ -16,45 +16,26 @@
     along with Project Perabird.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef __GAME_H__
-#define __GAME_H__
+#ifndef __PLAYER_H__
+#define __PLAYER_H__
 
 #include <string>
-#include <SDL/SDL.h>
-#include "Forms.h"
-#include "Connection.h"
-#include "Console.h"
+#include "Tools.h"
 
-#define GAME Game::getInstance()
-
-class Game
-{
+class Player {
 	public:
-		static Game *getInstance();
-		static void init();
-		static void quit();
-		void connect(std::string host, int port, std::string user, std::string pswd);
-		void disconnect();
-		void sendMessage(std::string msg);
-		Console *getConsole();
-		void toggleChat();
-		void render();
-		void event(SDL_Event&e);
-		bool alive();
-		void exit();
-	private:
-		Connection * connection;
-		Console console;
-		Forms::LoginForm loginForm;
-		Forms::ChatForm chatForm;
-		bool chatOpened;
+		Player();
+		~Player();
 		
-		std::string username;
-	
-		bool done;
-		Game();
-		~Game();
-		static Game *instance;
+		std::string getName();
+		void setName(std::string _name);
+		
+		vec3 getPosition();
+		void setPosition(int x, int y, int z);
+		void setPosition(vec3 _pos);
+	private:
+		std::string name;
+		vec3 pos;
 };
 
-#endif //__GAME_H__
+#endif //__PLAYER_H__

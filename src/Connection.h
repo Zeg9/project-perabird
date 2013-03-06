@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <SDL/SDL_net.h>
+#include <SDL/SDL_endian.h>
 
 #define MSG_SEP 0
 #define MSG_BEGIN 1
@@ -73,6 +74,7 @@ class Connection
 		bool isGood();
 		void send(void*msg, int size);
 		void sendByte(uint8_t i);
+		void sendFloat(float f);
 		uint8_t * recv(void* buffer, int size);
 		uint8_t recvByte();
 		Message parseMessage(std::string format); // format: b for byte, s for string, i for int, f for float

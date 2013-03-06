@@ -33,7 +33,7 @@ namespace Forms {
 			if (e.type == Gui::MOUSEUP)
 			{
 				if (userEntry->getEntryText() == "" || passEntry->getEntryText() == "") return;
-				GAME->connect("localhost",5153,userEntry->getEntryText(),passEntry->getEntryText());
+				GAME->connect("zeg9.strangled.net",5153,userEntry->getEntryText(),passEntry->getEntryText());
 			}
 		}
 		private:
