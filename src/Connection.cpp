@@ -21,6 +21,8 @@
 #include <openssl/sha.h>
 #include <SDL/SDL_net.h>
 #include "Game.h"
+#include "Debug.h"
+#include "Tools.h"
 #include "Connection.h"
 
 Message::Message() : type(255) {}
@@ -70,6 +72,9 @@ void Connection::send(void*msg, int size) {
 void Connection::sendByte(uint8_t i) {
 	send(&i,sizeof(uint8_t));
 }
+void Connection::sendFloat(float f) {
+	send(&f,sizeof(float));
+}
 
 uint8_t *Connection::recv(void* buffer, int size) {
 	if (isGood())
@@ -94,43 +99,48 @@ Message Connection::parseMessage(std::string format)
 {
 	Message m;
 	uint8_t lastByte(255);
-	for (int i = 0; i < format.size(); i++) switch(format[i]) {
-		case 'b':
+	for (int i = 0; i < format.size(); i++)
+	{
+		switch(format[i])
 		{
-			m.addByte(recvByte());
-			lastByte = recvByte();
-			break;
+			case 'b':
+			{
+				m.addByte(recvByte());
+				lastByte = recvByte();
+				break;
+			}
+			case 's':
+			{
+				std::string s;
+				char r(255);
+				while(1) {
+					r = recvByte();
+					if (r == MSG_SEP || r == MSG_END) break;
+					s += r;
+				} 
+				m.addString(s);
+				lastByte = r;
+				break;
+			}
+			case 'i':
+			{
+				int i;
+				recv(&i,sizeof(int));
+				m.addInt(i);
+				lastByte = recvByte();
+				break;
+			}
+			case 'f':
+			{
+				float f;
+				recv(&f,sizeof(float));
+				m.addFloat(f);
+				lastByte = recvByte();
+				break;
+			}
+			default:
+				break;
 		}
-		case 's':
-		{
-			std::string s;
-			char r(255);
-			while(r != MSG_SEP && r!=MSG_END) {
-				r = recvByte();
-				s += r;
-			} 
-			m.addString(s);
-			lastByte = r;
-			break;
-		}
-		case 'i':
-		{
-			int i;
-			recv(&i,sizeof(int));
-			m.addInt(i);
-			lastByte = recvByte();
-			break;
-		}
-		case 'f':
-		{
-			float f;
-			recv(&f,sizeof(float));
-			m.addFloat(f);
-			lastByte = recvByte();
-			break;
-		}
-		default:
-			break;
 	}
 	return m;
 }
@@ -148,6 +158,8 @@ Message Connection::receiveMessage()
 		case MSG_CHAT:
 			m = parseMessage("s");
 			break;
+		case MSG_PLAYERPOS:
+			m = parseMessage("sfff");
 	}
 	m.setType(type);
 	return m;
@@ -180,13 +192,30 @@ int Connection::recvLoop(void *cptr)
 	Message m;
 	while (c->isGood())
 	{
-		std::cout << "receiving..." << std::endl;
+		Debug::print(Debug::DEBUG,"receiving...");
 		m = c->receiveMessage();
-		if (m.getType() == MSG_CHAT)
+		switch (m.getType())
 		{
-			GAME->getConsole()->print(m.getString(0));
+			case MSG_JOIN:
+			{
+				Debug::print(Debug::DEBUG,"join: "+m.getString(0));
+				Player p;
+				p.setName(m.getString(0));
+				GAME->addPlayer(p);
+			}	break;
+			case MSG_CHAT:
+				GAME->getConsole()->print(m.getString(0));
+				break;
+			case MSG_PLAYERPOS:
+			{
+				Player &p = GAME->getPlayer(m.getString(0));
+				p.setPosition(m.getFloat(0),m.getFloat(1),m.getFloat(2));
+			}	break;
+			default:
+				Debug::print(Debug::WARNING, "Unknown message type:"
+					+toString(m.getType()));
+				break;
 		}
-		else std::cout << int(m.getType()) << std::endl;
 	}
 }
 

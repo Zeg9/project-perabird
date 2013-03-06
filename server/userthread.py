@@ -41,10 +41,15 @@ def userthread(user,users):
 				send(user.sock,MSG_ACCEPT)
 				send(user.sock,MSG_END)
 				for u in users:
-					send(u.sock,MSG_BEGIN)
-					send(u.sock,MSG_JOIN)
-					send(u.sock,user.name)
-					send(u.sock,MSG_END)
+					if u != user:
+						send(u.sock,MSG_BEGIN)
+						send(u.sock,MSG_JOIN)
+						send(u.sock,user.name)
+						send(u.sock,MSG_END)
+					send(user.sock,MSG_BEGIN)
+					send(user.sock,MSG_JOIN)
+					send(user.sock,u.name)
+					send(user.sock,MSG_END)
 				for u in users:
 					sendChat(u,'*** '+user.name+' joined the game')
 			else:
@@ -63,6 +68,11 @@ def userthread(user,users):
 				for u in users:
 					sendChat(u,'<'+user.name+'> '+msg)
 				sendChat(None,'[Chat] '+user.name+': '+msg)
+		if msgType == MSG_PLAYERPOS:
+			parsed = parseMessage('float:float:float',sock)
+			user.pos = tuple(parsed)
+			for u in users:
+				sendPosition(user,u)
 	print(addr[0],"lost connection")
 	user.sock.close()
 	users.remove(user)

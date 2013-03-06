@@ -21,3 +21,4 @@ class User:
 		self.sock = sock
 		self.addr = addr
 		self.name = ""
+		self.pos = (0,0,0)

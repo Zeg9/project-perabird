@@ -16,40 +16,17 @@
     along with Project Perabird.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#include <sstream>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include "Tools.h"
+#ifndef __TOOLS_H__
+#define __TOOLS_H__
 
-void make2d(bool rel)
-{
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	if (rel)
-		gluOrtho2D(0,1,0,1);
-	else
-	{
-		int viewport[4];
-		glGetIntegerv(GL_VIEWPORT,viewport);
-		gluOrtho2D(0,viewport[2],viewport[3],0);
-	}
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-}
+void make2d(bool rel);
 
-std::string toString(int i)
-{
-	std::ostringstream oss;
-	oss << i;
-	return oss.str();
-}
-std::string toString(float i)
-{
-	std::ostringstream oss;
-	oss << i;
-	return oss.str();
-}
+std::string toString(int i);
+std::string toString(float i);
 
+struct vec3 {
+	vec3();
+	float x,y,z;
+};
 
-vec3::vec3() : x(0), y(0), z(0) {}
-
+#endif //__TOOLS_H__
