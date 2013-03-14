@@ -1,3 +1,23 @@
+/*
+ * main.cpp
+ * This file is part of Perabird
+ *
+ * Copyright (C) 2013 - Zeg9
+ *
+ * Perabird is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Perabird is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Perabird. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <glm/glm.hpp>
@@ -8,16 +28,15 @@
 #include <fstream>
 #include <vector>
 #include "sdlglutils.h"
-
-#define getPath(x) "../data/" x // TODO make a resource management file
+#include "Resources.h"
+#include "Mesh.h"
+#include "Map.h"
 
 #define deg2rad(x) 0.017453293*x
 
-#define MAP_SCALE 15
-
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path);
 
-int main()
+int main(int argc, char**argv)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_WM_SetCaption("Perabird",0);
@@ -37,75 +56,59 @@ int main()
 		return -1;
 	}
 	
-	SDL_Surface*map_img = IMG_Load(getPath("map_1.png"));
-	
+	// OpenGL settings
 	glClearColor(.4,.4,1,0);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+	// Vertex array
 	GLuint vaID;
 	glGenVertexArrays(1,&vaID);
 	glBindVertexArray(vaID);
-	
-	unsigned int vertices_count = 2*3*map_img->w*map_img->h;  // 2 triangles per pixel
-	GLfloat mesh[vertices_count*3];
-	GLfloat colors[vertices_count*3];
-	GLfloat uvs[vertices_count*2];
+	// Load map
+	Map map("test");
+	glm::vec2 map_size = map.getSize();
+	Mesh map_mesh(2*3*map_size.x*map_size.y);  // 2 triangles per pixel
+	map_mesh.texture = loadTexture(getPath("grass.png"));
+	GLfloat *vertices = map_mesh.vertices;
+	GLfloat *uvs = map_mesh.uvs;
 	
 	unsigned int current_quad = 0; // 1 quad = 2 triangles = 6 vertices (let's say)
-	for (unsigned int x = 0; x < map_img->w; x++)
-	for (unsigned int y = 0; y < map_img->h; y++)
+	for (unsigned int x = 0; x < map_size.x; x++)
+	for (unsigned int y = 0; y < map_size.y; y++)
 	{
 		float z00, z10, z01, z11;
 		Uint8 r,g,b;
-		SDL_GetRGB(SDL_GetPixel(map_img,x,y),map_img->format,&r,&g,&b); z00 = (float)(r)/255.0*MAP_SCALE;
-		if (x+1 < map_img->w) {
-			SDL_GetRGB(SDL_GetPixel(map_img,x+1,y),map_img->format,&r,&g,&b); z10 = (float)(r)/255.0*MAP_SCALE;
+		z00 = map.terrainHeight(x,y);
+		if (x+1 < map_size.x) {
+			z10 = map.terrainHeight(x+1,y);
 		} else z10 = z00;
-		if (y+1 < map_img->h) {
-			SDL_GetRGB(SDL_GetPixel(map_img,x,y+1),map_img->format,&r,&g,&b); z01 = (float)(r)/255.0*MAP_SCALE;
+		if (y+1 < map_size.y) {
+			z01 = map.terrainHeight(x,y+1);
 		} else z01 = z00;
-		if (x+1 < map_img->w && y+1 < map_img->h) {
-			SDL_GetRGB(SDL_GetPixel(map_img,x+1,y+1),map_img->format,&r,&g,&b); z11 = (float)(r)/255.0*MAP_SCALE;
+		if (x+1 < map_size.x && y+1 < map_size.y) {
+			z11 = map.terrainHeight(x+1,y+1);
 		} else if (z01 != z00) z11=z01;
 		  else if (z10 != z00) z11=z10;
 		  else z11=z00;
 		unsigned int v = current_quad*2*3*3;
-		mesh[v] = x;      mesh[v+1] = z00;  mesh[v+2] = y;
-		mesh[v+3] = x;    mesh[v+4] = z01;  mesh[v+5] = y+1;
-		mesh[v+6] = x+1;  mesh[v+7] = z10;  mesh[v+8] = y;
-		mesh[v+9] = x+1;  mesh[v+10] = z11; mesh[v+11] = y+1;
-		mesh[v+12] = x+1; mesh[v+13] = z10; mesh[v+14] = y;
-		mesh[v+15] = x;   mesh[v+16] = z01; mesh[v+17] = y+1;
+		vertices[v] = x;      vertices[v+1] = z00;  vertices[v+2] = y;
+		vertices[v+3] = x;    vertices[v+4] = z01;  vertices[v+5] = y+1;
+		vertices[v+6] = x+1;  vertices[v+7] = z10;  vertices[v+8] = y;
+		vertices[v+9] = x+1;  vertices[v+10] = z11; vertices[v+11] = y+1;
+		vertices[v+12] = x+1; vertices[v+13] = z10; vertices[v+14] = y;
+		vertices[v+15] = x;   vertices[v+16] = z01; vertices[v+17] = y+1;
 		unsigned int u = current_quad*2*3*2;
-		float s = 1; // uv Scale
+		float s = 5; // uv Scale
 		uvs[u] = x*s; uvs[u+1] = y*s;
 		uvs[u+2] = x*s; uvs[u+3] = (y+1)*s;
 		uvs[u+4] = (x+1)*s; uvs[u+5] = y*s;
 		uvs[u+6] = (x+1)*s; uvs[u+7] = (y+1)*s;
 		uvs[u+8] = (x+1)*s; uvs[u+9] = y*s;
 		uvs[u+10] = x*s; uvs[u+11] = (y+1)*s;
-		for (unsigned int i = 0; i < 18; i++)
-			colors[v+i] = 1;
 		current_quad ++;
 	}
-	for (int i = 0; i < vertices_count*3; i++)
-		colors[i] = 1.0;
-	
-	GLuint vertexbuffer;
-	glGenBuffers(1,&vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh), mesh, GL_STATIC_DRAW);
-	
-	GLuint colorbuffer;
-	glGenBuffers(1,&colorbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
-	
-	GLuint uvbuffer;
-	glGenBuffers(1,&uvbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(uvs), uvs, GL_STATIC_DRAW);
+	map_mesh.updateBuffers();
 	
 	
 	GLuint programID = LoadShaders(
@@ -113,15 +116,9 @@ int main()
 		getPath("fragment.glsl")
 	);
 	
-	GLuint matrixID = glGetUniformLocation(programID, "MVP");
-	GLuint vertexPositionID = glGetAttribLocation(programID,"vertexPosition");
-	GLuint vertexColorID = glGetAttribLocation(programID,"vertexColor");
-	GLuint vertexUVID = glGetAttribLocation(programID,"vertexUV");
-	
-	GLuint texture = loadTexture(getPath("grass.png"));
 	
 	glm::vec3 position(0,0,3);
-	double mspeed(.5), speed(0),sspeed(0);
+	double mspeed(.05), speed(0),sspeed(0);
 	float rx(0), ry(0);
 	SDL_Event e; bool done = false;
 	while (!done)
@@ -135,12 +132,14 @@ int main()
 			cos(deg2rad(ry)) * cos(deg2rad(rx))
 		);
 		position += direction*glm::vec3(speed);
+		position.y --;
 		glm::vec3 right = glm::vec3(
 			sin(deg2rad(rx)-M_PI/2.0f),
 			0,
 			cos(deg2rad(rx)-M_PI/2.0f)
 		);
 		position += right*glm::vec3(sspeed);
+		position.y = map.terrainHeight(position.x,position.z)+.5; // TODO improve...
 		
 		glm::mat4 projection = glm::perspective(60.0f,4.0f/3.0f,.1f,100.0f);
 		glm::mat4 view = glm::lookAt(
@@ -150,21 +149,7 @@ int main()
 		);
 		glm::mat4 model;
 		glm::mat4 mvp = projection*view*model;
-		glUniformMatrix4fv(matrixID,1,GL_FALSE,&mvp[0][0]);
-	
-		glEnableVertexAttribArray(vertexPositionID);
-		glBindBuffer(GL_ARRAY_BUFFER,vertexbuffer);
-		glVertexAttribPointer(vertexPositionID,3,GL_FLOAT,GL_FALSE,0,0);
-		glEnableVertexAttribArray(vertexColorID);
-		glBindBuffer(GL_ARRAY_BUFFER,colorbuffer);
-		glVertexAttribPointer(vertexColorID,3,GL_FLOAT,GL_FALSE,0,0);
-		glEnableVertexAttribArray(vertexUVID);
-		glBindBuffer(GL_ARRAY_BUFFER,uvbuffer);
-		glVertexAttribPointer(vertexUVID,2,GL_FLOAT,GL_FALSE,0,0);
-		glDrawArrays(GL_TRIANGLES,0,vertices_count);
-		glDisableVertexAttribArray(vertexPositionID);
-		glDisableVertexAttribArray(vertexColorID);
-		glDisableVertexAttribArray(vertexUVID);
+		map_mesh.render(programID,mvp);
 	
 		SDL_GL_SwapBuffers();
 		
