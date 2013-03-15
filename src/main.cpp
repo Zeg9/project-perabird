@@ -127,9 +127,9 @@ int main(int argc, char**argv)
 		glUseProgram(programID);
 		
 		glm::vec3 direction(
-			cos(deg2rad(ry)) * sin(deg2rad(rx)),
-			sin(deg2rad(ry)),
-			cos(deg2rad(ry)) * cos(deg2rad(rx))
+			sin(deg2rad(rx)),
+			0,
+			cos(deg2rad(rx))
 		);
 		position += direction*glm::vec3(speed);
 		position.y --;
@@ -142,11 +142,10 @@ int main(int argc, char**argv)
 		position.y = map.terrainHeightf(position.x,position.z)+.5; // TODO improve...
 		
 		glm::mat4 projection = glm::perspective(60.0f,4.0f/3.0f,.1f,100.0f);
-		glm::mat4 view = glm::lookAt(
-			position,
-			position+direction,
-			glm::vec3(0.0f,1.0f,0.0f)
-		);
+		glm::mat4 view(1.0f);
+		view = glm::rotate(view, -ry, glm::vec3(1,0,0));
+		view = glm::rotate(view, 180-rx, glm::vec3(0,1,0));
+		view = glm::translate(view, -position);
 		glm::mat4 model;
 		glm::mat4 mvp = projection*view*model;
 		map_mesh.render(programID,mvp);
