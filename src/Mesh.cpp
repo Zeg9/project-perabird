@@ -48,12 +48,18 @@ void Mesh::updateBuffers()
 
 void Mesh::render(GLuint programID, glm::mat4 mvp)
 {
+
 	GLuint matrixID = glGetUniformLocation(programID, "MVP");
+	GLuint textureID = glGetUniformLocation(programID, "textureSampler");
 	GLuint vertexPositionID = glGetAttribLocation(programID,"vertexPosition");
 	GLuint vertexUVID = glGetAttribLocation(programID,"vertexUV");
 	
 	glUniformMatrix4fv(matrixID,1,GL_FALSE,&mvp[0][0]);
 
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glUniform1i(textureID, 0);
+	
 	glEnableVertexAttribArray(vertexPositionID);
 	glBindBuffer(GL_ARRAY_BUFFER,vertexbuffer);
 	glVertexAttribPointer(vertexPositionID,3,GL_FLOAT,GL_FALSE,0,0);

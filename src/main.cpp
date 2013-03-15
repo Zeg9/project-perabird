@@ -117,7 +117,7 @@ int main(int argc, char**argv)
 	);
 	
 	
-	glm::vec3 position(0,0,3);
+	glm::vec3 position(map_size.x/2.0f,0.0f,map_size.y/2.0f);
 	double mspeed(.05), speed(0),sspeed(0);
 	float rx(0), ry(0);
 	SDL_Event e; bool done = false;
@@ -132,14 +132,13 @@ int main(int argc, char**argv)
 			cos(deg2rad(rx))
 		);
 		position += direction*glm::vec3(speed);
-		position.y --;
 		glm::vec3 right = glm::vec3(
 			sin(deg2rad(rx)-M_PI/2.0f),
 			0,
 			cos(deg2rad(rx)-M_PI/2.0f)
 		);
 		position += right*glm::vec3(sspeed);
-		position.y = map.terrainHeightf(position.x,position.z)+.5; // TODO improve...
+		position.y = map.terrainHeightf(position.x,position.z)+.5; // TODO allow jumping ?...
 		
 		glm::mat4 projection = glm::perspective(60.0f,4.0f/3.0f,.1f,100.0f);
 		glm::mat4 view(1.0f);
@@ -163,12 +162,14 @@ int main(int argc, char**argv)
 					switch(e.key.keysym.sym)
 					{
 						case SDLK_z:
+						case SDLK_w:
 							speed = mspeed;
 							break;
 						case SDLK_s:
 							speed = -mspeed;
 							break;
 						case SDLK_q:
+						case SDLK_a:
 							sspeed = -mspeed;
 							break;
 						case SDLK_d:
@@ -183,10 +184,12 @@ int main(int argc, char**argv)
 					switch(e.key.keysym.sym)
 					{
 						case SDLK_z:
+						case SDLK_w:
 						case SDLK_s:
 							speed = 0;
 							break;
 						case SDLK_q:
+						case SDLK_a:
 						case SDLK_d:
 							sspeed = 0;
 							break;
