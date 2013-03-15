@@ -139,7 +139,7 @@ int main(int argc, char**argv)
 			cos(deg2rad(rx)-M_PI/2.0f)
 		);
 		position += right*glm::vec3(sspeed);
-		position.y = map.terrainHeight(position.x,position.z)+.5; // TODO improve...
+		position.y = map.terrainHeightf(position.x,position.z)+.5; // TODO improve...
 		
 		glm::mat4 projection = glm::perspective(60.0f,4.0f/3.0f,.1f,100.0f);
 		glm::mat4 view = glm::lookAt(

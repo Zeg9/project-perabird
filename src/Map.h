@@ -33,6 +33,7 @@ class Map
 		~Map();
 		glm::vec2 getSize();
 		double terrainHeight(int x, int y);
+		double terrainHeightf(double x, double y);
 	private:
 		SDL_Surface *terrain;
 };

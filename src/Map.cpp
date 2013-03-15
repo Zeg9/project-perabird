@@ -50,4 +50,25 @@ double Map::terrainHeight(int x, int y)
 	return (double)(r)/255.0f*MAX_HEIGHT;
 }
 
+double Map::terrainHeightf(double x, double y)
+{
+	// This function is just doing bilinear interpolation
+	int x1 = (int)x;
+	int y1 = (int)y;
+	int x2 = x1+1;
+	int y2 = y1+1;
+	double p11 = terrainHeight(x1,y1);
+	double p21 = terrainHeight(x2,y1);
+	double p12 = terrainHeight(x1,y2);
+	double p22 = terrainHeight(x2,y2);
+	double o = 
+		(1.0/((x2-x1)*(y2-y1))) * (
+			p11*(x2-x)*(y2-y) +
+			p21*(x-x1)*(y2-y) +
+			p12*(x2-x)*(y-y1) +
+			p22*(x-x1)*(y-y1)
+		);
+	return o;
+}
+
 
