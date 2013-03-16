@@ -249,11 +249,14 @@ int main(int argc, char**argv)
 			cos(deg2rad(rx)-M_PI/2.0f)
 		);
 		position += right*glm::vec3(sspeed);
-		if (vspeed > -10)
-			vspeed -= mspeed*.5;
 		position.y += vspeed;
 		if(position.y < map.terrainHeightf(position.x,position.z)+.5)
+		{
 			position.y = map.terrainHeightf(position.x,position.z)+.5;
+			vspeed = 0;
+		}
+		else if (vspeed > -10)
+			vspeed -= mspeed*.05;
 		
 		glm::mat4 projection = glm::perspective(60.0f,4.0f/3.0f,.1f,1000.0f);
 		glm::mat4 view(1.0f);
@@ -317,7 +320,8 @@ int main(int argc, char**argv)
 							sspeed = mspeed;
 							break;
 						case SDLK_SPACE:
-							vspeed = mspeed*5;
+							if (position.y <= map.terrainHeightf(position.x,position.z)+.6)
+								vspeed = mspeed;
 							break;
 						case SDLK_ESCAPE:
 							done = true;
