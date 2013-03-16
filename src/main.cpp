@@ -230,7 +230,7 @@ int main(int argc, char**argv)
 	
 	
 	glm::vec3 position(map_size.x/2.0f,0.0f,map_size.y/2.0f);
-	double mspeed(.05), speed(0),sspeed(0);
+	double mspeed(.05), speed(0),sspeed(0), vspeed(0);
 	float rx(0), ry(0);
 	SDL_Event e; bool done = false;
 	while (!done)
@@ -249,7 +249,11 @@ int main(int argc, char**argv)
 			cos(deg2rad(rx)-M_PI/2.0f)
 		);
 		position += right*glm::vec3(sspeed);
-		position.y = map.terrainHeightf(position.x,position.z)+.5; // TODO allow jumping ?...
+		if (vspeed > -10)
+			vspeed -= mspeed*.5;
+		position.y += vspeed;
+		if(position.y < map.terrainHeightf(position.x,position.z)+.5)
+			position.y = map.terrainHeightf(position.x,position.z)+.5;
 		
 		glm::mat4 projection = glm::perspective(60.0f,4.0f/3.0f,.1f,100.0f);
 		glm::mat4 view(1.0f);
@@ -311,6 +315,9 @@ int main(int argc, char**argv)
 							break;
 						case SDLK_d:
 							sspeed = mspeed;
+							break;
+						case SDLK_SPACE:
+							vspeed = mspeed*5;
 							break;
 						case SDLK_ESCAPE:
 							done = true;
