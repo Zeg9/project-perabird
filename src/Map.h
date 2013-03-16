@@ -26,6 +26,9 @@
 #include <SDL/SDL.h>
 #include <glm/glm.hpp>
 
+#define MAX_HEIGHT 15
+#define WATER_HEIGHT 7
+
 class Map
 {
 	public:

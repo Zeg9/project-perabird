@@ -25,7 +25,6 @@
 #include "Resources.h"
 #include "sdlglutils.h"
 
-#define MAX_HEIGHT 15
 
 Map::Map(std::string name)
 {
@@ -46,7 +45,10 @@ double Map::terrainHeight(int x, int y)
 {
 	if (x < 0 || y < 0 || x >= getSize().x || y >= getSize().y) return 0;
 	Uint8 r,g,b;
-	SDL_GetRGB(SDL_GetPixel(terrain,x,y),terrain->format,&r,&g,&b);
+	SDL_GetRGB(
+		SDL_GetPixel(terrain,x,y),
+		terrain->format,
+		&r,&g,&b);
 	return (double)(r)/255.0f*MAX_HEIGHT;
 }
 

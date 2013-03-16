@@ -34,7 +34,6 @@
 #include "Map.h"
 
 #define deg2rad(x) 0.017453293*x
-#define WATER_HEIGHT 8
 
 void letterMesh(Mesh &m, char c)
 {
