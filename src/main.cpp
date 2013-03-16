@@ -27,12 +27,14 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include "utils.h"
 #include "sdlglutils.h"
 #include "Resources.h"
 #include "Mesh.h"
 #include "Map.h"
 
 #define deg2rad(x) 0.017453293*x
+#define WATER_HEIGHT 8
 
 void letterMesh(Mesh &m, char c)
 {
@@ -82,12 +84,26 @@ int main(int argc, char**argv)
 	GLuint vaID;
 	glGenVertexArrays(1,&vaID);
 	glBindVertexArray(vaID);
+	// Load shaders
+	GLuint simple_programID = LoadShaders(
+		getPath("shaders/simple/vertex.glsl"),
+		getPath("shaders/simple/fragment.glsl")
+	);
+	GLuint map_programID = LoadShaders(
+		getPath("shaders/map/vertex.glsl"),
+		getPath("shaders/map/fragment.glsl")
+	);
+	GLuint water_programID = LoadShaders(
+		getPath("shaders/water/vertex.glsl"),
+		getPath("shaders/water/fragment.glsl")
+	);
 	// Load map
 	Map map("test");
 	glm::vec2 map_size = map.getSize();
 	Mesh map_mesh(2*3*map_size.x*map_size.y);  // 2 triangles per pixel
 	{
 		map_mesh.texture = loadTexture(getPath("grass.png"));
+		map_mesh.programID = map_programID;
 		GLfloat *vertices = map_mesh.vertices;
 		GLfloat *uvs = map_mesh.uvs;
 
@@ -129,10 +145,48 @@ int main(int argc, char**argv)
 		map_mesh.updateBuffers();
 	}
 	
+	Mesh water_mesh(4*3);
+	{
+		int w(map_size.x),h(map_size.y),y(WATER_HEIGHT);
+		water_mesh.texture = loadTexture(getPath("water.png"));
+		water_mesh.programID = water_programID;
+		GLfloat *vertices = water_mesh.vertices;
+		GLfloat *uvs = water_mesh.uvs;
+		vertices[0] = 0;  vertices[1] = y;  vertices[2] = 0;
+		vertices[3] = 0;  vertices[4] = y;  vertices[5] = h;
+		vertices[6] = w;  vertices[7] = y;  vertices[8] = 0;
+		vertices[9] = w;  vertices[10] = y; vertices[11] = h;
+		vertices[12] = w; vertices[13] = y; vertices[14] = 0;
+		vertices[15] = 0; vertices[16] = y; vertices[17] = h;
+		
+		vertices[18] = 0; vertices[19] = y;  vertices[20] = 0;
+		vertices[21] = w; vertices[25] = y; vertices[23] = 0;
+		vertices[24] = 0; vertices[22] = y; vertices[26] = h;
+		vertices[27] = w; vertices[28] = y; vertices[29] = h;
+		vertices[30] = 0; vertices[34] = y; vertices[32] = h;
+		vertices[33] = w; vertices[31] = y; vertices[35] = 0;
+		
+		uvs[0] = 0;  uvs[1] = 0;
+		uvs[2] = 0;  uvs[3] = h;
+		uvs[4] = w;  uvs[5] = 0;
+		uvs[6] = w;  uvs[7] = h;
+		uvs[8] = w;  uvs[9] = 0;
+		uvs[10] = 0; uvs[11] = h;
+		
+		uvs[12] = 0; uvs[13] = 0;
+		uvs[14] = w; uvs[15] = 0;
+		uvs[16] = 0; uvs[17] = h;
+		uvs[18] = w; uvs[19] = h;
+		uvs[20] = 0; uvs[21] = h;
+		uvs[22] = w; uvs[23] = 0;
+		water_mesh.updateBuffers();
+	}
+	
 	Mesh letter(2*3); // it is a quad so 2 triangles
 	{
 		int w(16),h(16);
 		letter.texture = loadTexture(getPath("FreeMono15.png"));
+		letter.programID = simple_programID;
 		GLfloat *vertices = letter.vertices;
 		GLfloat *uvs = letter.uvs;
 		vertices[0] = 0;  vertices[1] = 0;  vertices[2] = 0;
@@ -141,6 +195,7 @@ int main(int argc, char**argv)
 		vertices[9] = w;  vertices[10] = h; vertices[11] = 0;
 		vertices[12] = 0; vertices[13] = h; vertices[14] = 0;
 		vertices[15] = w; vertices[16] = 0; vertices[17] = 0;
+		
 		uvs[0] = 0;  uvs[1] = 0;
 		uvs[2] = 1;  uvs[3] = 0;
 		uvs[4] = 0;  uvs[5] = 1;
@@ -154,6 +209,7 @@ int main(int argc, char**argv)
 	{
 		int w(256),h(32);
 		entry_test.texture = loadTexture(getPath("gui/entry.png"));
+		entry_test.programID = simple_programID;
 		GLfloat *vertices = entry_test.vertices;
 		GLfloat *uvs = entry_test.uvs;
 		vertices[0] = 0;  vertices[1] = 0;  vertices[2] = 0;
@@ -162,6 +218,7 @@ int main(int argc, char**argv)
 		vertices[9] = w;  vertices[10] = h; vertices[11] = 0;
 		vertices[12] = 0; vertices[13] = h; vertices[14] = 0;
 		vertices[15] = w; vertices[16] = 0; vertices[17] = 0;
+		
 		uvs[0] = 0;  uvs[1] = 0;
 		uvs[2] = 1;  uvs[3] = 0;
 		uvs[4] = 0;  uvs[5] = 1;
@@ -172,12 +229,6 @@ int main(int argc, char**argv)
 	}
 	
 	
-	GLuint programID = LoadShaders(
-		getPath("vertex.glsl"),
-		getPath("fragment.glsl")
-	);
-	
-	
 	glm::vec3 position(map_size.x/2.0f,0.0f,map_size.y/2.0f);
 	double mspeed(.05), speed(0),sspeed(0);
 	float rx(0), ry(0);
@@ -185,7 +236,6 @@ int main(int argc, char**argv)
 	while (!done)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glUseProgram(programID);
 		
 		glm::vec3 direction(
 			sin(deg2rad(rx)),
@@ -208,7 +258,10 @@ int main(int argc, char**argv)
 		view = glm::translate(view, -position);
 		glm::mat4 model(1.0f);
 		glm::mat4 mvp = projection*view*model;
-		map_mesh.render(programID,mvp);
+		map_mesh.render(mvp);
+		glEnable(GL_BLEND);
+		water_mesh.render(mvp);
+		glDisable(GL_BLEND);
 		
 		projection = glm::ortho(0.0f,(float)width,0.0f,(float)height,0.0f,1.0f);
 		view = glm::mat4(1.0f);
@@ -217,21 +270,19 @@ int main(int argc, char**argv)
 		mvp = projection*view*model;
 		glEnable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
-		std::string text = "Project Perabird";
+		std::string text = "Pos="
+			+toString(position.x)+", "
+			+toString(position.y)+", "
+			+toString(position.z);
 		for (unsigned int i = 0; i < text.size(); i++)
 		{
 			letterMesh(letter,text[i]);
-			letter.color = glm::vec4(
-				(float)rand()/(float)RAND_MAX,
-				(float)rand()/(float)RAND_MAX,
-				(float)rand()/(float)RAND_MAX,
-				1.0f
-				);
-			letter.render(programID, mvp);
+			letter.color = glm::vec4(glm::vec3(0.0f),1.0f);
+			letter.render(mvp);
 			model = glm::translate(model,glm::vec3(8.0f,0.0f,0.0f));
 			mvp = projection*view*model;
 		}
-		//entry_test.render(programID,mvp);
+		//entry_test.render(mvp);
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 	

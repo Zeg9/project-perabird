@@ -20,8 +20,9 @@
 
 #include "Mesh.h"
 #include <iostream>
+#include <SDL/SDL.h>
 
-Mesh::Mesh(unsigned int vc):vertices_count(vc),color(1.0f)
+Mesh::Mesh(unsigned int vc):vertices_count(vc),color(1.0f),programID(0)
 {
 	vertices = new GLfloat[vertices_count*3];
 	uvs = new GLfloat[vertices_count*2];
@@ -45,17 +46,20 @@ void Mesh::updateBuffers()
 		sizeof(GLfloat)*vertices_count*2, uvs, GL_STATIC_DRAW);
 }
 
-void Mesh::render(GLuint programID, glm::mat4 mvp)
+void Mesh::render(glm::mat4 mvp)
 {
-
+	glUseProgram(programID);
+	
 	GLuint matrixID = glGetUniformLocation(programID, "MVP");
 	GLuint colorID = glGetUniformLocation(programID, "color");
 	GLuint textureID = glGetUniformLocation(programID, "textureSampler");
+	GLuint ticksID = glGetUniformLocation(programID, "ticks");
 	GLuint vertexPositionID = glGetAttribLocation(programID,"vertexPosition");
 	GLuint vertexUVID = glGetAttribLocation(programID,"vertexUV");
 	
 	glUniformMatrix4fv(matrixID,1,GL_FALSE,&mvp[0][0]);
 	glUniform4fv(colorID,1,&color[0]);
+	glUniform1i(ticksID,SDL_GetTicks());
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);

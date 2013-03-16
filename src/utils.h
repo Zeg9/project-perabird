@@ -1,5 +1,5 @@
 /*
- * Mesh.h
+ * utils.h
  * This file is part of Perabird
  *
  * Copyright (C) 2013 - Zeg9
@@ -18,24 +18,13 @@
  * along with Perabird. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <glm/glm.hpp>
+#ifndef __UTILS_H__
+#define __UTILS_H__
 
-class Mesh
-{
-	public:
-		Mesh(unsigned int vc);
-		~Mesh();
-		void updateBuffers();
-		void render(glm::mat4 mvp);
-		
-		unsigned int vertices_count;
-		GLfloat *vertices; // array of size vertices_count*3
-		GLfloat *uvs; // array of size vertices_count*2
-		GLuint vertexbuffer;
-		GLuint uvbuffer;
-		GLuint texture;
-		glm::vec4 color;
-		GLuint programID;
-};
+#include <string>
+
+std::string toString(float f);
+
+#endif /* __UTILS_H__ */
+
+

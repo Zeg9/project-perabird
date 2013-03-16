@@ -8,5 +8,5 @@ uniform sampler2D textureSampler;
 
 void main()
 {
-	gl_FragColor = texture2D(textureSampler,uv)*color + (fragPos_vs.z/100.0);
+	gl_FragColor = texture2D(textureSampler,uv)*color;
 }
