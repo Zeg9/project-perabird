@@ -21,7 +21,7 @@
 #include "Mesh.h"
 #include <iostream>
 
-Mesh::Mesh(unsigned int vc):vertices_count(vc)
+Mesh::Mesh(unsigned int vc):vertices_count(vc),color(1.0f)
 {
 	vertices = new GLfloat[vertices_count*3];
 	uvs = new GLfloat[vertices_count*2];
@@ -39,7 +39,6 @@ void Mesh::updateBuffers()
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glBufferData(GL_ARRAY_BUFFER,
 		sizeof(GLfloat)*vertices_count*3, vertices, GL_STATIC_DRAW);
-	std::cout << sizeof(vertices) << std::endl;
 	
 	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
 	glBufferData(GL_ARRAY_BUFFER,
@@ -50,11 +49,13 @@ void Mesh::render(GLuint programID, glm::mat4 mvp)
 {
 
 	GLuint matrixID = glGetUniformLocation(programID, "MVP");
+	GLuint colorID = glGetUniformLocation(programID, "color");
 	GLuint textureID = glGetUniformLocation(programID, "textureSampler");
 	GLuint vertexPositionID = glGetAttribLocation(programID,"vertexPosition");
 	GLuint vertexUVID = glGetAttribLocation(programID,"vertexUV");
 	
 	glUniformMatrix4fv(matrixID,1,GL_FALSE,&mvp[0][0]);
+	glUniform4fv(colorID,1,&color[0]);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);

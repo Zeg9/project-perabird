@@ -34,6 +34,22 @@
 
 #define deg2rad(x) 0.017453293*x
 
+void letterMesh(Mesh &m, char c)
+{
+	float x1 = (c%16)/16.0f;
+	float y1 = 1-(c/16+1)/16.0f;
+	float x2 = x1 + (16.0f/256.0f);
+	float y2 = y1 + (16.0f/256.0f);
+	GLfloat *uvs = m.uvs;
+	uvs[0] = x1;  uvs[1] = y1;
+	uvs[2] = x2;  uvs[3] = y1;
+	uvs[4] = x1;  uvs[5] = y2;
+	uvs[6] = x2;  uvs[7] = y2;
+	uvs[8] = x1;  uvs[9] = y2;
+	uvs[10] = x2; uvs[11] = y1;
+	m.updateBuffers();
+}
+
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path);
 
 int main(int argc, char**argv)
@@ -60,6 +76,7 @@ int main(int argc, char**argv)
 	glClearColor(.4,.4,1,0);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LESS);
 	// Vertex array
 	GLuint vaID;
@@ -69,46 +86,90 @@ int main(int argc, char**argv)
 	Map map("test");
 	glm::vec2 map_size = map.getSize();
 	Mesh map_mesh(2*3*map_size.x*map_size.y);  // 2 triangles per pixel
-	map_mesh.texture = loadTexture(getPath("grass.png"));
-	GLfloat *vertices = map_mesh.vertices;
-	GLfloat *uvs = map_mesh.uvs;
-	
-	unsigned int current_quad = 0; // 1 quad = 2 triangles = 6 vertices (let's say)
-	for (unsigned int x = 0; x < map_size.x; x++)
-	for (unsigned int y = 0; y < map_size.y; y++)
 	{
-		float z00, z10, z01, z11;
-		Uint8 r,g,b;
-		z00 = map.terrainHeight(x,y);
-		if (x+1 < map_size.x) {
-			z10 = map.terrainHeight(x+1,y);
-		} else z10 = z00;
-		if (y+1 < map_size.y) {
-			z01 = map.terrainHeight(x,y+1);
-		} else z01 = z00;
-		if (x+1 < map_size.x && y+1 < map_size.y) {
-			z11 = map.terrainHeight(x+1,y+1);
-		} else if (z01 != z00) z11=z01;
-		  else if (z10 != z00) z11=z10;
-		  else z11=z00;
-		unsigned int v = current_quad*2*3*3;
-		vertices[v] = x;      vertices[v+1] = z00;  vertices[v+2] = y;
-		vertices[v+3] = x;    vertices[v+4] = z01;  vertices[v+5] = y+1;
-		vertices[v+6] = x+1;  vertices[v+7] = z10;  vertices[v+8] = y;
-		vertices[v+9] = x+1;  vertices[v+10] = z11; vertices[v+11] = y+1;
-		vertices[v+12] = x+1; vertices[v+13] = z10; vertices[v+14] = y;
-		vertices[v+15] = x;   vertices[v+16] = z01; vertices[v+17] = y+1;
-		unsigned int u = current_quad*2*3*2;
-		float s = 5; // uv Scale
-		uvs[u] = x*s; uvs[u+1] = y*s;
-		uvs[u+2] = x*s; uvs[u+3] = (y+1)*s;
-		uvs[u+4] = (x+1)*s; uvs[u+5] = y*s;
-		uvs[u+6] = (x+1)*s; uvs[u+7] = (y+1)*s;
-		uvs[u+8] = (x+1)*s; uvs[u+9] = y*s;
-		uvs[u+10] = x*s; uvs[u+11] = (y+1)*s;
-		current_quad ++;
+		map_mesh.texture = loadTexture(getPath("grass.png"));
+		GLfloat *vertices = map_mesh.vertices;
+		GLfloat *uvs = map_mesh.uvs;
+
+		unsigned int current_quad = 0; // 1 quad = 2 triangles = 6 vertices (let's say)
+		for (unsigned int x = 0; x < map_size.x; x++)
+		for (unsigned int y = 0; y < map_size.y; y++)
+		{
+			float z00, z10, z01, z11;
+			Uint8 r,g,b;
+			z00 = map.terrainHeight(x,y);
+			if (x+1 < map_size.x) {
+				z10 = map.terrainHeight(x+1,y);
+			} else z10 = z00;
+			if (y+1 < map_size.y) {
+				z01 = map.terrainHeight(x,y+1);
+			} else z01 = z00;
+			if (x+1 < map_size.x && y+1 < map_size.y) {
+				z11 = map.terrainHeight(x+1,y+1);
+			} else if (z01 != z00) z11=z01;
+			  else if (z10 != z00) z11=z10;
+			  else z11=z00;
+			unsigned int v = current_quad*2*3*3;
+			vertices[v] = x;      vertices[v+1] = z00;  vertices[v+2] = y;
+			vertices[v+3] = x;    vertices[v+4] = z01;  vertices[v+5] = y+1;
+			vertices[v+6] = x+1;  vertices[v+7] = z10;  vertices[v+8] = y;
+			vertices[v+9] = x+1;  vertices[v+10] = z11; vertices[v+11] = y+1;
+			vertices[v+12] = x+1; vertices[v+13] = z10; vertices[v+14] = y;
+			vertices[v+15] = x;   vertices[v+16] = z01; vertices[v+17] = y+1;
+			unsigned int u = current_quad*2*3*2;
+			float s = 5; // uv Scale
+			uvs[u] = x*s; uvs[u+1] = y*s;
+			uvs[u+2] = x*s; uvs[u+3] = (y+1)*s;
+			uvs[u+4] = (x+1)*s; uvs[u+5] = y*s;
+			uvs[u+6] = (x+1)*s; uvs[u+7] = (y+1)*s;
+			uvs[u+8] = (x+1)*s; uvs[u+9] = y*s;
+			uvs[u+10] = x*s; uvs[u+11] = (y+1)*s;
+			current_quad ++;
+		}
+		map_mesh.updateBuffers();
 	}
-	map_mesh.updateBuffers();
+	
+	Mesh letter(2*3); // it is a quad so 2 triangles
+	{
+		int w(16),h(16);
+		letter.texture = loadTexture(getPath("FreeMono15.png"));
+		GLfloat *vertices = letter.vertices;
+		GLfloat *uvs = letter.uvs;
+		vertices[0] = 0;  vertices[1] = 0;  vertices[2] = 0;
+		vertices[3] = w;  vertices[4] = 0;  vertices[5] = 0;
+		vertices[6] = 0;  vertices[7] = h;  vertices[8] = 0;
+		vertices[9] = w;  vertices[10] = h; vertices[11] = 0;
+		vertices[12] = 0; vertices[13] = h; vertices[14] = 0;
+		vertices[15] = w; vertices[16] = 0; vertices[17] = 0;
+		uvs[0] = 0;  uvs[1] = 0;
+		uvs[2] = 1;  uvs[3] = 0;
+		uvs[4] = 0;  uvs[5] = 1;
+		uvs[6] = 1;  uvs[7] = 1;
+		uvs[8] = 0;  uvs[9] = 1;
+		uvs[10] = 1; uvs[11] = 0;
+		letter.updateBuffers();
+	}
+	
+	Mesh entry_test(2*3); // it is a quad so 2 triangles
+	{
+		int w(256),h(32);
+		entry_test.texture = loadTexture(getPath("gui/entry.png"));
+		GLfloat *vertices = entry_test.vertices;
+		GLfloat *uvs = entry_test.uvs;
+		vertices[0] = 0;  vertices[1] = 0;  vertices[2] = 0;
+		vertices[3] = w;  vertices[4] = 0;  vertices[5] = 0;
+		vertices[6] = 0;  vertices[7] = h;  vertices[8] = 0;
+		vertices[9] = w;  vertices[10] = h; vertices[11] = 0;
+		vertices[12] = 0; vertices[13] = h; vertices[14] = 0;
+		vertices[15] = w; vertices[16] = 0; vertices[17] = 0;
+		uvs[0] = 0;  uvs[1] = 0;
+		uvs[2] = 1;  uvs[3] = 0;
+		uvs[4] = 0;  uvs[5] = 1;
+		uvs[6] = 1;  uvs[7] = 1;
+		uvs[8] = 0;  uvs[9] = 1;
+		uvs[10] = 1; uvs[11] = 0;
+		entry_test.updateBuffers();
+	}
 	
 	
 	GLuint programID = LoadShaders(
@@ -145,9 +206,34 @@ int main(int argc, char**argv)
 		view = glm::rotate(view, -ry, glm::vec3(1,0,0));
 		view = glm::rotate(view, 180-rx, glm::vec3(0,1,0));
 		view = glm::translate(view, -position);
-		glm::mat4 model;
+		glm::mat4 model(1.0f);
 		glm::mat4 mvp = projection*view*model;
 		map_mesh.render(programID,mvp);
+		
+		projection = glm::ortho(0.0f,(float)width,0.0f,(float)height,0.0f,1.0f);
+		view = glm::mat4(1.0f);
+		view = glm::scale(view,glm::vec3(2.0f));
+		model = glm::mat4(1.0f);
+		mvp = projection*view*model;
+		glEnable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		std::string text = "Project Perabird";
+		for (unsigned int i = 0; i < text.size(); i++)
+		{
+			letterMesh(letter,text[i]);
+			letter.color = glm::vec4(
+				(float)rand()/(float)RAND_MAX,
+				(float)rand()/(float)RAND_MAX,
+				(float)rand()/(float)RAND_MAX,
+				1.0f
+				);
+			letter.render(programID, mvp);
+			model = glm::translate(model,glm::vec3(8.0f,0.0f,0.0f));
+			mvp = projection*view*model;
+		}
+		//entry_test.render(programID,mvp);
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
 	
 		SDL_GL_SwapBuffers();
 		

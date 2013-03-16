@@ -36,4 +36,5 @@ class Mesh
 		GLuint vertexbuffer;
 		GLuint uvbuffer;
 		GLuint texture;
+		glm::vec4 color;
 };
