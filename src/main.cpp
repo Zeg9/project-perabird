@@ -58,7 +58,7 @@ int main(int argc, char**argv)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_WM_SetCaption("Perabird",0);
-	//SDL_WM_GrabInput(SDL_GRAB_ON);
+	SDL_WM_GrabInput(SDL_GRAB_ON);
 	SDL_ShowCursor(SDL_DISABLE);
 	int width(640), height(480);
 	if (SDL_SetVideoMode(width,height,32,SDL_OPENGL|SDL_RESIZABLE) == 0)
@@ -75,7 +75,7 @@ int main(int argc, char**argv)
 	}
 	
 	// OpenGL settings
-	glClearColor(.4,.4,1,0);
+	glClearColor(.5,.5,1,0);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -242,14 +242,32 @@ int main(int argc, char**argv)
 			0,
 			cos(deg2rad(rx))
 		);
-		position += direction*glm::vec3(speed);
 		glm::vec3 right = glm::vec3(
 			sin(deg2rad(rx)-M_PI/2.0f),
 			0,
 			cos(deg2rad(rx)-M_PI/2.0f)
 		);
-		position += right*glm::vec3(sspeed);
-		position.y += vspeed;
+		glm::vec3 newpos = position
+			+ direction*glm::vec3(speed)
+			+ right*glm::vec3(sspeed)
+			+ glm::vec3(0,vspeed,0);
+		if(newpos.y < map.terrainHeightf(newpos.x,newpos.z)+.5)
+		{
+			float f = map.terrainHeightf(newpos.x,newpos.z)+.5-newpos.y;
+			f = .025/f;
+			if (f < 1)
+			{
+				newpos = position
+				+ direction*glm::vec3(speed*f)
+				+ right*glm::vec3(sspeed*f)
+				+ glm::vec3(0,vspeed*f,0); // slow down when climbing
+			}
+		} else if (
+			vspeed <= 0
+			&& position.y <= map.terrainHeightf(position.x,position.z)+.6
+			&& newpos.y > map.terrainHeightf(newpos.x,newpos.z)+.5)
+				newpos.y = map.terrainHeightf(newpos.x,newpos.z)+.5; // if on ground, stay on ground
+		position = newpos;
 		if(position.y < map.terrainHeightf(position.x,position.z)+.5)
 		{
 			position.y = map.terrainHeightf(position.x,position.z)+.5;
