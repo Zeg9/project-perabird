@@ -266,6 +266,10 @@ int main(int argc, char**argv)
 			&& position.y <= map.terrainHeightf(position.x,position.z)+.6
 			&& newpos.y > map.terrainHeightf(newpos.x,newpos.z)+.5)
 				newpos.y = map.terrainHeightf(newpos.x,newpos.z)+.5; // if on ground, stay on ground
+		if (newpos.x < 0) newpos.x = 0;
+		if (newpos.x >= map_size.x) newpos.x = map_size.x;
+		if (newpos.z < 0) newpos.z = 0;
+		if (newpos.z >= map_size.y) newpos.z = map_size.y;
 		position = newpos;
 		if(position.y < map.terrainHeightf(position.x,position.z)+.5)
 		{
@@ -337,7 +341,8 @@ int main(int argc, char**argv)
 							sspeed = mspeed;
 							break;
 						case SDLK_SPACE:
-							if (position.y <= map.terrainHeightf(position.x,position.z)+.6)
+							if (position.y <= WATER_HEIGHT+.6 || // allow swimming
+								position.y <= map.terrainHeightf(position.x,position.z)+.6) // jump if you touch the ground
 								vspeed = mspeed;
 							break;
 						case SDLK_ESCAPE:
