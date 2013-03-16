@@ -40,8 +40,8 @@ void letterMesh(Mesh &m, char c)
 {
 	float x1 = (c%16)/16.0f;
 	float y1 = 1-(c/16+1)/16.0f;
-	float x2 = x1 + (16.0f/256.0f);
-	float y2 = y1 + (16.0f/256.0f);
+	float x2 = x1 + (1.0f/16.0f);
+	float y2 = y1 + (1.0f/16.0f);
 	GLfloat *uvs = m.uvs;
 	uvs[0] = x1;  uvs[1] = y1;
 	uvs[2] = x2;  uvs[3] = y1;
@@ -185,7 +185,7 @@ int main(int argc, char**argv)
 	Mesh letter(2*3); // it is a quad so 2 triangles
 	{
 		int w(16),h(16);
-		letter.texture = loadTexture(getPath("FreeMono15.png"));
+		letter.texture = loadTexture(getPath("FreeMono.png"));
 		letter.programID = simple_programID;
 		GLfloat *vertices = letter.vertices;
 		GLfloat *uvs = letter.uvs;
@@ -255,7 +255,7 @@ int main(int argc, char**argv)
 		if(position.y < map.terrainHeightf(position.x,position.z)+.5)
 			position.y = map.terrainHeightf(position.x,position.z)+.5;
 		
-		glm::mat4 projection = glm::perspective(60.0f,4.0f/3.0f,.1f,100.0f);
+		glm::mat4 projection = glm::perspective(60.0f,4.0f/3.0f,.1f,1000.0f);
 		glm::mat4 view(1.0f);
 		view = glm::rotate(view, -ry, glm::vec3(1,0,0));
 		view = glm::rotate(view, 180-rx, glm::vec3(0,1,0));
