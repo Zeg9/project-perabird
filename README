@@ -1,0 +1,39 @@
+Project-Perabird
+================
+
+About
+-----
+
+Project Perabird is what will become a MMORPG game...
+Perabird is released under the terms of the GNU General Public License, see COPYING for more information.
+
+Credits go to:
+ * Zeg9 for code
+ * jmf for ideas and textures
+
+
+Compiling
+---------
+
+To compile project perabird, you will need:
+* CMake >= 2.6
+* OpenGL
+* GLEW
+* SDL 1.2.*
+* SDL_image
+
+To start compiling, type the following commands:
+  mkdir build
+  cd build
+  cmake ..
+  make
+Then you can start by typing:
+  ./perabird
+
+
+Troubleshooting
+---------------
+
+Please report any problem at this URL:
+  https://github.com/Zeg9/project-perabird/issues
+
