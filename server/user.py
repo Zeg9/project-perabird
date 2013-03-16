@@ -20,5 +20,14 @@ class User:
 	def __init__(self,sock,addr):
 		self.sock = sock
 		self.addr = addr
+		self.locked = False
 		self.name = ""
 		self.pos = (0,0,0)
+	def lock(self):
+		while self.locked:
+			pass
+		self.locked = True
+	def unlock(self):
+		self.locked = False
+	# These lock and unlock are sort of mutex for the socket
+

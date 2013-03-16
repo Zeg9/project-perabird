@@ -46,13 +46,16 @@ def sendChat(user,msg):
 	if user == None:
 		print(msg)
 	else:
+		user.lock()
 		send(user.sock,MSG_BEGIN)
 		send(user.sock,MSG_CHAT)
 		send(user.sock,msg)
 		send(user.sock,MSG_END)
+		user.unlock()
 
 def sendPosition(source,target):
 	x,y,z = source.pos
+	target.lock()
 	send(target.sock,MSG_BEGIN)
 	send(target.sock,MSG_PLAYERPOS)
 	send(target.sock,source.name)
@@ -64,5 +67,6 @@ def sendPosition(source,target):
 	send(target.sock,MSG_SEP)
 	send(target.sock,struct.pack('f',z))
 	send(target.sock,MSG_END)
+	target.unlock()
 
 

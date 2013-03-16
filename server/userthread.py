@@ -37,26 +37,34 @@ def userthread(user,users):
 			if auth(name,pswd):
 				user.name = name
 				print(user.name,"logged in from",addr[0])
+				user.lock()
 				send(user.sock,MSG_BEGIN)
 				send(user.sock,MSG_ACCEPT)
 				send(user.sock,MSG_END)
+				user.unlock()
 				for u in users:
 					if u != user:
+						u.lock()
 						send(u.sock,MSG_BEGIN)
 						send(u.sock,MSG_JOIN)
 						send(u.sock,user.name)
 						send(u.sock,MSG_END)
+						u.unlock()
+					user.lock()
 					send(user.sock,MSG_BEGIN)
 					send(user.sock,MSG_JOIN)
 					send(user.sock,u.name)
 					send(user.sock,MSG_END)
+					user.unlock()
 				for u in users:
 					sendChat(u,'*** '+user.name+' joined the game')
 			else:
 				print(addr[0],"tried to login as",name)
+				user.lock()
 				send(user.sock,MSG_BEGIN)
 				send(user.sock,MSG_KICK)
 				send(user.sock,MSG_END)
+				user.unlock()
 				break
 		if msgType == MSG_CHAT:
 			parsed = parseMessage('str',sock)
