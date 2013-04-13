@@ -11,5 +11,5 @@ void main()
 	gl_FragColor = texture2D(textureSampler,uv);
 	gl_FragColor *= color;
 	gl_FragColor *= fragPos_ms.y/10.0; // higher = lighter
-	//gl_FragColor += fragPos_vs.z/250.0; // fog
+	gl_FragColor += fragPos_vs.z/250.0; // fog
 }

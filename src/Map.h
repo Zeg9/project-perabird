@@ -23,11 +23,14 @@
 #define __MAP_H__
 
 #include <string>
+#include <GL/glew.h>
 #include <SDL/SDL.h>
 #include <glm/glm.hpp>
 
 #define MAX_HEIGHT 15
 #define WATER_HEIGHT 7
+
+class Mesh;
 
 class Map
 {
@@ -37,6 +40,9 @@ class Map
 		glm::vec2 getSize();
 		double terrainHeight(int x, int y);
 		double terrainHeightf(double x, double y);
+		unsigned int getMeshSize();
+		void renderMesh(Mesh& map_mesh, GLuint map_programID);
+		void waterMesh(Mesh &water_mesh, GLuint water_programID);
 	private:
 		SDL_Surface *terrain;
 };
