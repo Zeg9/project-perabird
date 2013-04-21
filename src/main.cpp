@@ -23,6 +23,7 @@
 #include <glm/gtc/matrix_transform.hpp> 
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
+#include <AGuiSy/AGuiSy.h>
 #include <iostream>
 #include "utils.h"
 #include "sdlglutils.h"
@@ -54,7 +55,7 @@ int main(int argc, char**argv)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_WM_SetCaption("Perabird",0);
-	SDL_WM_GrabInput(SDL_GRAB_ON);
+	//SDL_WM_GrabInput(SDL_GRAB_ON);
 	SDL_ShowCursor(SDL_DISABLE);
 	int width(640), height(480);
 	if (SDL_SetVideoMode(width,height,32,SDL_OPENGL|SDL_RESIZABLE) == 0)
@@ -69,6 +70,7 @@ int main(int argc, char**argv)
 		SDL_Quit();
 		return -1;
 	}
+	AGuiSy::initGLStuff();
 	
 	// OpenGL settings
 	glClearColor(.5,.5,1,0);
@@ -102,28 +104,7 @@ int main(int argc, char**argv)
 	Mesh water_mesh(4*3);
 	map.waterMesh(water_mesh,water_programID);
 	
-	Mesh letter(2*3); // it is a quad so 2 triangles
-	{
-		int w(16),h(16);
-		letter.texture = loadTexture(getPath("FreeMono.png"));
-		letter.programID = simple_programID;
-		GLfloat *vertices = letter.vertices;
-		GLfloat *uvs = letter.uvs;
-		vertices[0] = 0;  vertices[1] = 0;  vertices[2] = 0;
-		vertices[3] = 1;  vertices[4] = 0;  vertices[5] = 0;
-		vertices[6] = 0;  vertices[7] = 1;  vertices[8] = 0;
-		vertices[9] = 1;  vertices[10] = 1; vertices[11] = 0;
-		vertices[12] = 0; vertices[13] = 1; vertices[14] = 0;
-		vertices[15] = 1; vertices[16] = 0; vertices[17] = 0;
-		
-		uvs[0] = 0;  uvs[1] = 0;
-		uvs[2] = 1;  uvs[3] = 0;
-		uvs[4] = 0;  uvs[5] = 1;
-		uvs[6] = 1;  uvs[7] = 1;
-		uvs[8] = 0;  uvs[9] = 1;
-		uvs[10] = 1; uvs[11] = 0;
-		letter.updateBuffers();
-	}
+	AGuiSy::Font font(loadTexture(getPath("font.png")));
 	
 	Mesh entry_test(2*3); // it is a quad so 2 triangles
 	{
@@ -156,7 +137,6 @@ int main(int argc, char**argv)
 	while (!done)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
 		glm::vec3 direction(
 			sin(deg2rad(rx)),
 			0,
@@ -201,6 +181,8 @@ int main(int argc, char**argv)
 			vspeed -= mspeed*.05;
 		
 		// Render
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
 		glm::mat4 projection = glm::perspective(60.0f,4.0f/3.0f,.1f,1000.0f);
 		glm::mat4 view(1.0f);
 		view = glm::rotate(view, -ry, glm::vec3(1,0,0));
@@ -211,33 +193,15 @@ int main(int argc, char**argv)
 		map_mesh.render(mvp);
 		glEnable(GL_BLEND);
 		water_mesh.render(mvp);
-		glDisable(GL_BLEND);
 		
-		projection = glm::ortho(0.0f,(float)width,0.0f,(float)height,0.0f,1.0f);
-		view = glm::mat4(1.0f);
-		view = glm::scale(view,glm::vec3(32.0f));
-		model = glm::mat4(1.0f);
-		mvp = projection*view*model;
-		glEnable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
-		std::string text = "Pos="
-			+toString(position.x)+", "
-			+toString(position.y)+", "
-			+toString(position.z);
-		for (unsigned int i = 0; i < text.size(); i++)
-		{
-			letterMesh(letter,text[i]);
-			letter.color = glm::vec4(glm::vec3(0.0f),1.0f);
-			letter.render(mvp);
-			model = glm::translate(model,glm::vec3(0.5f,0.0f,0.0f));
-			mvp = projection*view*model;
-		}
-		view = glm::mat4(1.0f);
-		model = glm::mat4(1.0f);
-		mvp = projection*view*model;
-		//entry_test.render(mvp);
-		glEnable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
+		std::string text =
+			"X: "+toString((int)position.x)+"\n"+
+			"Y: "+toString((int)position.y)+"\n"+
+			"Z: "+toString((int)position.z);
+		font.renderText(text,10,10,16);
+		
+		font.renderText("Project perabird, early development version",0,height-24,24);
 	
 		SDL_GL_SwapBuffers();
 		
