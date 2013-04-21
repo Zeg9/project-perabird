@@ -21,6 +21,7 @@ To compile project perabird, you will need:
 * GLEW
 * SDL 1.2.*
 * SDL_image
+* AGuiSy (latest version: https://github.com/Zeg9/aguisy)
 
 To start compiling, type the following commands:
   mkdir build
