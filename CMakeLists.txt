@@ -17,6 +17,10 @@ link_libraries(
 	${AGUISY_LIBRARY}
 )
 
+if(WIN32)
+	link_libraries(ws2_32.lib)
+endif()
+
 file(
 	GLOB_RECURSE
 	source_files

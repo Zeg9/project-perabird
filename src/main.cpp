@@ -30,6 +30,7 @@
 #include "Resources.h"
 #include "Mesh.h"
 #include "Map.h"
+#include "Socket.h"
 
 #define deg2rad(x) 0.017453293*x
 
@@ -53,6 +54,7 @@ void letterMesh(Mesh &m, char c)
 
 int main(int argc, char**argv)
 {
+	Socket::init();
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_WM_SetCaption("Perabird",0);
 	//SDL_WM_GrabInput(SDL_GRAB_ON);
@@ -283,6 +285,7 @@ int main(int argc, char**argv)
 		}
 	}
 	SDL_Quit();
+	Socket::quit();
 }
 
 // TODO move this to a separate file, render code too
