@@ -18,6 +18,9 @@
  * along with Perabird. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __MESH_H__
+#define __MESH_H__
+
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <glm/glm.hpp>
@@ -39,3 +42,6 @@ class Mesh
 		glm::vec4 color;
 		GLuint programID;
 };
+
+#endif /* __MESH_H__ */
+
