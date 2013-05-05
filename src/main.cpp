@@ -50,15 +50,24 @@ void letterMesh(Mesh &m, char c)
 	m.updateBuffers();
 }
 
+bool connectmenu = true;
 
+class ConnectMenuHandler : public AGuiSy::EventHandler {
+	public:
+		void onEvent(AGuiSy::Element &el, AGuiSy::Event &ev)
+		{
+			if (ev.type == AGuiSy::EVENT_MOUSEUP && el.getName()=="done")
+				connectmenu = false;
+		}
+};
 
 int main(int argc, char**argv)
 {
 	Socket::init();
 	SDL_Init(SDL_INIT_VIDEO);
+	SDL_EnableUNICODE(1);
+	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY,SDL_DEFAULT_REPEAT_INTERVAL);
 	SDL_WM_SetCaption("Perabird",0);
-	//SDL_WM_GrabInput(SDL_GRAB_ON);
-	SDL_ShowCursor(SDL_DISABLE);
 	int width(640), height(480);
 	if (SDL_SetVideoMode(width,height,32,SDL_OPENGL|SDL_RESIZABLE) == 0)
 	{
@@ -72,14 +81,48 @@ int main(int argc, char**argv)
 		SDL_Quit();
 		return -1;
 	}
-	AGuiSy::initGLStuff();
+	SDL_Event e;
+	AGuiSy::init(getPath("../data/gui/"),new ConnectMenuHandler());
+	
 	
 	// OpenGL settings
 	glClearColor(.5,.5,1,0);
 	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LESS);
+
+	// Title screen
+	AGuiSy::drawQuad(0,0,width,height,AGuiSy::loadTexture(getPath("../data/title.png")));
+	SDL_GL_SwapBuffers();
+	do { SDL_WaitEvent(&e); } while (!(e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_j));
+	
+	// Connect menu
+	
+	AGuiSy::parseElements(
+		"entry[pos=10,10;size=123,24;name=user;text=User;]"
+		"entry[pos=143,10;size=123,24;name=pass;text=password;hidetext=true;]"
+		"entry[pos=10,44;size=256,24;name=address;text=127.0.0.1:3434;]"
+		"button[pos=276,10;size=58,58;name=done;text=Ok;]"
+	);
+	// Menu size is 344,78
+	SDL_SetVideoMode(344,78,32,SDL_OPENGL);
+	glViewport(0,0,344,78);
+	while (connectmenu)
+	{
+		while (SDL_PollEvent(&e)) AGuiSy::event(e);
+		glClear(GL_COLOR_BUFFER_BIT);
+		AGuiSy::render();
+		SDL_GL_SwapBuffers();
+	}
+	SDL_SetVideoMode(width,height,32,SDL_OPENGL|SDL_RESIZABLE);
+	glViewport(0,0,width,height);
+	
+	AGuiSy::clearElements();
+	//SDL_WM_GrabInput(SDL_GRAB_ON);
+	SDL_ShowCursor(SDL_DISABLE);
+	
+	// done, let's start game
+	
 	// Vertex array
 	GLuint vaID;
 	glGenVertexArrays(1,&vaID);
@@ -108,34 +151,10 @@ int main(int argc, char**argv)
 	
 	AGuiSy::Font font(loadTexture(getPath("font.png")));
 	
-	Mesh entry_test(2*3); // it is a quad so 2 triangles
-	{
-		int w(256),h(32);
-		entry_test.texture = loadTexture(getPath("gui/entry.png"));
-		entry_test.programID = simple_programID;
-		GLfloat *vertices = entry_test.vertices;
-		GLfloat *uvs = entry_test.uvs;
-		vertices[0] = 0;  vertices[1] = 0;  vertices[2] = 0;
-		vertices[3] = w;  vertices[4] = 0;  vertices[5] = 0;
-		vertices[6] = 0;  vertices[7] = h;  vertices[8] = 0;
-		vertices[9] = w;  vertices[10] = h; vertices[11] = 0;
-		vertices[12] = 0; vertices[13] = h; vertices[14] = 0;
-		vertices[15] = w; vertices[16] = 0; vertices[17] = 0;
-		
-		uvs[0] = 0;  uvs[1] = 0;
-		uvs[2] = 1;  uvs[3] = 0;
-		uvs[4] = 0;  uvs[5] = 1;
-		uvs[6] = 1;  uvs[7] = 1;
-		uvs[8] = 0;  uvs[9] = 1;
-		uvs[10] = 1; uvs[11] = 0;
-		entry_test.updateBuffers();
-	}
-	
-	
 	glm::vec3 position(map_size.x/2.0f,0.0f,map_size.y/2.0f);
 	double mspeed(.05), speed(0),sspeed(0), vspeed(0);
 	float rx(0), ry(0);
-	SDL_Event e; bool done = false;
+	bool done = false;
 	while (!done)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -179,8 +198,9 @@ int main(int argc, char**argv)
 			position.y = map.terrainHeightf(position.x,position.z)+.5;
 			vspeed = 0;
 		}
-		else if (vspeed > -10)
+		else
 			vspeed -= mspeed*.05;
+		if (position.y <= WATER_HEIGHT+.6 && vspeed < -.02) vspeed = -.02; // slow falling inside water
 		
 		// Render
 		glEnable(GL_DEPTH_TEST);
@@ -204,7 +224,7 @@ int main(int argc, char**argv)
 		font.renderText(text,10,10,16);
 		
 		font.renderText("Project perabird, early development version",0,height-24,24);
-	
+		AGuiSy::render();
 		SDL_GL_SwapBuffers();
 		
 		while (SDL_PollEvent(&e))
