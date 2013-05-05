@@ -1,4 +1,5 @@
 *~
-build
-windows
 *.blend?
+bin
+build
+build_win
